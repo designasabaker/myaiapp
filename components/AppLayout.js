@@ -5,8 +5,11 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faCoins} from "@fortawesome/free-solid-svg-icons";
 import {Logo} from "./logo";
 
-export const AppLayout = ({children}) => {
+export const AppLayout = ({children, ...rest}) => {
     const { user, isLoading } = useUser();
+    console.log("(Client Side) App Props - AppLayout:", rest);
+    const {availableTokens, posts, currentPostId} = rest;
+    console.log("(Client Side) App Props - currentPostId:", currentPostId);
 
     return (
         <div className={"grid grid-cols-[300px_1fr] h-screen max-h-screen"}>
@@ -24,11 +27,20 @@ export const AppLayout = ({children}) => {
                         className={"block mt-2 text-center"}
                     >
                         <FontAwesomeIcon icon={faCoins} className={"text-yellow-500"} />
-                        <span className={"pl-1"}>0 token available</span>
+                        <span className={"pl-1"}>{availableTokens} token available</span>
                     </Link>
                 </div>
                 <div className={"flex-1 overflow-auto bg-gradient-to-b from-slate-800 to-cyan-800"}>
-                    list of posts
+                    {posts.map((post, index)=>{
+                        return (
+                            <Link
+                                className={`border  block my-1 px-2 py-1 text-white text-ellipsis... bg-white/10 rounded-2 overflow-hidden hover:bg-cyan-700 ${currentPostId === post._id ? 'bg-cyan-700 border-cyan-700' : "border-transparent"}`}
+                                href={`/post/${post._id}`} key={post._id}>
+                                {post.topic} {currentPostId === post._id && "👈"}
+                            </Link>
+                        )
+                    })
+                    }
                 </div>
 
                 {/* user information */}
@@ -61,7 +73,7 @@ export const AppLayout = ({children}) => {
                     }
                 </div>
             </div>
-            <div className={""}>{children}</div>
+            {children}
         </div>
     );
 }

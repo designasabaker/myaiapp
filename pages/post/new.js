@@ -1,14 +1,20 @@
 import {withPageAuthRequired} from "@auth0/nextjs-auth0";
 import {AppLayout} from "../../components";
 import {useState} from "react";
+import {useRouter} from "next/router";
+import getAppProps from "../../utils/getAppProps";
 
 export default function NewPost(props) {
-    console.log(props);
-    const [postContent, setPostContent] = useState("");
+    const router = useRouter();
+    // console.log(props);
+    // const [postContent, setPostContent] = useState("");
     const [topic, setTopic] = useState("");
     const [keywords, setKeywords] = useState("");
 
+    const [isLoading, setIsLoading] = useState(false);
+
     const handleSubmit = async (e) =>{
+        setIsLoading(true);
         e.preventDefault();
         const res = await fetch(`/api/generatePost`,{
             method: "POST",
@@ -21,8 +27,12 @@ export default function NewPost(props) {
             })
         });
         const json = await res.json();
-        console.log('Result:',json.post.postContent);
-        setPostContent(json.post.postContent);
+        console.log('(Client Side)Result:',json);
+        setIsLoading(false);
+        // setPostContent(json.post.postContent);
+        if(json?.postId){
+            router.push(`/post/${json.postId}`);
+        }
     }
 
     return (
@@ -48,13 +58,19 @@ export default function NewPost(props) {
                 </div>
                 <button
                     type={"submit"}
-                        className={"btn"}
-                        onSubmit={handleSubmit}>
-                    Generate Post
+                    className={"btn"}
+                    onSubmit={handleSubmit}
+                    disabled={isLoading}
+                    style={{
+                        cursor: isLoading ? 'not-allowed' : 'pointer',
+                        opacity: isLoading ? '0.5' : '1'
+                    }}
+                >
+                    {isLoading ? 'Loading...' : 'Generate Post'}
                 </button>
             </form>
-            <div className={"max-w-screen-sm p-10"}
-                dangerouslySetInnerHTML={{__html: postContent}} />
+            {/*<div className={"max-w-screen-sm p-10"}*/}
+            {/*    dangerouslySetInnerHTML={{__html: postContent}} />*/}
         </div>);
 }
 
@@ -67,10 +83,9 @@ NewPost.getLayout = function getLayout(page, pageProps) {
     )
 }
 
-export const getServerSideProps = withPageAuthRequired(()=>{
-    return {
-        props: {
-
-        }
+export const getServerSideProps = withPageAuthRequired({
+    getServerSideProps: async (ctx) => {
+        const props = await getAppProps(ctx);
+        return {props}
     }
 })
