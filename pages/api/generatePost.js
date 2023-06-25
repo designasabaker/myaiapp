@@ -25,6 +25,16 @@ export default withApiAuthRequired( async function handler(req, res) {
 
     const {topic, keywords} = req.body;
 
+    if(!topic || !keywords){
+        res.status(422); // unprocessable entity, data is invalid
+        return;
+    }
+
+    if(topic.length > 100 || keywords.length > 100){
+        res.status(422); // unprocessable entity, data is invalid
+        return;
+    }
+
     // const topic = "Top 10 tips for dog owners";
     // const keywords = "dog, tips, training, food, health, exercise, grooming, vet, socialization, love";
 

@@ -17,7 +17,10 @@ export const getAppProps = async (ctx) => {
     }
 
     // user
-    const posts = await db.collection("posts").find({userId: user._id}).sort({createdAt: -1}).toArray();
+    const posts = await db.collection("posts")
+        .find({userId: user._id}).limit(5)
+        .sort({createdAt: -1})
+        .toArray();
 
     return {
         availableTokens: user.availableTokens,

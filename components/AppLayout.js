@@ -4,12 +4,26 @@ import {useUser} from "@auth0/nextjs-auth0/client";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faCoins} from "@fortawesome/free-solid-svg-icons";
 import {Logo} from "./logo";
+import {useContext, useEffect} from "react";
+import PostsContext from "../context/postsContext";
 
 export const AppLayout = ({children, ...rest}) => {
     const { user, isLoading } = useUser();
     console.log("(Client Side) App Props - AppLayout:", rest);
-    const {availableTokens, posts, currentPostId} = rest;
+    const {availableTokens, posts:postsFromSSR, currentPostId, postCreated} = rest;
     console.log("(Client Side) App Props - currentPostId:", currentPostId);
+
+    const {setPostsFromSSR, posts, getPosts, haveNoMorePosts} = useContext(PostsContext);
+
+    useEffect(()=>{
+        setPostsFromSSR(postsFromSSR);
+        if(currentPostId){
+            const isExist = postsFromSSR.find(post=>post._id === currentPostId);
+            if(!isExist){
+                getPosts({lastPostDate: postCreated, getNewerPost: true});
+            }
+        }
+    },[postsFromSSR,setPostsFromSSR, postCreated, getPosts]);
 
     return (
         <div className={"grid grid-cols-[300px_1fr] h-screen max-h-screen"}>
@@ -30,7 +44,7 @@ export const AppLayout = ({children, ...rest}) => {
                         <span className={"pl-1"}>{availableTokens} token available</span>
                     </Link>
                 </div>
-                <div className={"flex-1 overflow-auto bg-gradient-to-b from-slate-800 to-cyan-800"}>
+                <div className={"flex-1 overflow-auto  bg-gradient-to-b from-slate-800 to-cyan-800"}>
                     {posts.map((post, index)=>{
                         return (
                             <Link
@@ -41,6 +55,15 @@ export const AppLayout = ({children, ...rest}) => {
                         )
                     })
                     }
+                    {!haveNoMorePosts && (
+                    <div
+                        className={"hover:underline text-sm text-slate-400 text-center cursor-pointer mt-4"}
+                        onClick={()=>getPosts({
+                            lastPostDate: posts[posts.length-1].createdAt,
+                        })}
+                    >
+                        Load more posts
+                    </div>)}
                 </div>
 
                 {/* user information */}
